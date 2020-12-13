@@ -71,26 +71,30 @@ int calculate_payout(int whiteMatches, int redMatch){
 int get_payout(Balls myBalls, Balls drawnBalls){
     int whiteMatches = 0, redMatch = 0;
     for(int i = 0; i < SIZE; i++){
-        if(myBalls.whiteballs[i] == drawnBalls.whiteballs[i])
-            whiteMatches++;
+        for(int j = 0; j < SIZE; j++){
+            if(myBalls.whiteballs[i] == drawnBalls.whiteballs[j]){
+                whiteMatches++;
+                break;
+            }
+        }
     }
     if(myBalls.redball == drawnBalls.redball)
         redMatch = 1;
     return calculate_payout(whiteMatches, redMatch);
 }
 
-void generate_balls(Balls* myBalls){
+void generate_balls(Balls* balls){
     for(int i = 0; i < SIZE; i++){
-        myBalls->whiteballs[i] = (rand() % 69) + 1;
+        balls->whiteballs[i] = (rand() % 69) + 1;
     }
-    myBalls->redball = (rand() % 26) + 1;
+    balls->redball = (rand() % 26) + 1;
 }
 
-void print_balls(Balls myBalls){
+void print_balls(Balls balls){
     for(int i = 0; i < SIZE; i++){
-        printf("%d ", myBalls.whiteballs[i]);
+        printf("%d ", balls.whiteballs[i]);
     }
-    printf("%d\n", myBalls.redball);
+    printf("%d\n", balls.redball);
 }
 
 int add_payouts(int payouts[]){
@@ -121,8 +125,29 @@ void get_flags(Flags* flags, int argc, char* argv[]){
     }
 }
 
+void print_draw(Balls myBalls, Balls drawnBalls, int payout){
+    printf("My balls: \t");
+    print_balls(myBalls);
+    printf("Drawn balls: \t");
+    print_balls(drawnBalls);
+    printf("Payout: $%d\n", payout);
+    printf("-------------------------------\n");
+}
+
+void print_to_file(char filename[], int total, Flags flags){
+    int file = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0744);
+    char totalString[10];
+    sprintf(totalString, "%d\n", total);
+    int written = write(file, totalString, strlen(totalString));
+    if(flags.dflag == 1){
+        printf("Bytes written: %d\n", written);
+    }
+    close(file);
+}
+
 int main(int argc, char* argv[]){
 
+    //Handling flags
     Flags flags;
     get_flags(&flags, argc, argv);
     if(flags.dflag == 1)
@@ -132,6 +157,7 @@ int main(int argc, char* argv[]){
     else
         runs = atoi(argv[1]);
 
+    //Declaring variables
     Balls myBalls;
     Balls drawnBalls;
     int payouts[runs];
@@ -142,18 +168,14 @@ int main(int argc, char* argv[]){
 
     srand((unsigned) time(&t));
     
+    //Simulate each lottery drawing
     start = clock();
     for(int i = 0; i < runs; i++){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
         payouts[i] = get_payout(myBalls, drawnBalls);
         if(flags.vflag == 1){
-            printf("My balls: \t");
-            print_balls(myBalls);
-            printf("Drawn balls: \t");
-            print_balls(drawnBalls);
-            printf("Payout: $%d\n", payouts[i]);
-            printf("-------------------------------\n");
+            print_draw(myBalls, drawnBalls, payouts[i]);
         }
     }
     int total = add_payouts(payouts);
@@ -161,16 +183,11 @@ int main(int argc, char* argv[]){
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Total payout: $%d\n", total);
     
+    //Write to file if -f flag is on
     if(flags.fflag == 1){
-        int file = open(argv[3], O_WRONLY | O_APPEND | O_CREAT, 0744);
-        char totalString[10];
-        sprintf(totalString, "%d\n", total);
-        int written = write(file, totalString, strlen(totalString));
-        if(flags.dflag == 1){
-            printf("Bytes written: %d\n", written);
-        }
-        close(file);
+        print_to_file(argv[3], total, flags);
     }
+    //Write CPU time used if -d flag is on
     if(flags.dflag == 1)
         printf("CPU time: %f\n", cpu_time_used);
 
