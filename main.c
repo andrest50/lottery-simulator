@@ -11,7 +11,8 @@
 
 #define SIZE 5
 #define JACKPOT 500000000
-//#define RUNS 1000
+#define COST 2
+#define RUNS 1000
 
 typedef struct Balls {
     int whiteballs[SIZE];
@@ -24,7 +25,8 @@ typedef struct Flags {
     int dflag = 0;
 } Flags;
 
-int runs = 1000;
+int runs = RUNS;
+int cost = COST;
 
 /*int compare_ball(int myWhiteball, int drawnWhiteball){
     if(myWhiteball == drawnWhiteball)
@@ -130,7 +132,7 @@ void print_draw(Balls myBalls, Balls drawnBalls, int payout){
     print_balls(myBalls);
     printf("Drawn balls: \t");
     print_balls(drawnBalls);
-    printf("Payout: $%d\n", payout);
+    printf("Winnings: $%d\n", payout);
     printf("-------------------------------\n");
 }
 
@@ -181,7 +183,8 @@ int main(int argc, char* argv[]){
     int total = add_payouts(payouts);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Total payout: $%d\n", total);
+    printf("Total winnings: $%d\n", total);
+    printf("Net earnings: $%d\n", total - cost * runs);
     
     //Write to file if -f flag is on
     if(flags.fflag == 1){
