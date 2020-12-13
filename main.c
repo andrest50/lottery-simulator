@@ -20,9 +20,10 @@ typedef struct Balls {
 } Balls;
 
 typedef struct Flags {
-    int vflag = 0; 
-    int fflag = 0; 
-    int dflag = 0;
+    int vflag = 0; //verbose 
+    int fflag = 0; //write to file
+    int dflag = 0; //development info
+    int wflag = 0; //show only winnings
 } Flags;
 
 int runs = RUNS;
@@ -109,7 +110,7 @@ int add_payouts(int payouts[]){
 
 void get_flags(Flags* flags, int argc, char* argv[]){
     int opt;
-    while((opt = getopt(argc, argv, "vfd")) != -1){
+    while((opt = getopt(argc, argv, "vfdw")) != -1){
         switch(opt){
             case 'v':
                 flags->vflag = 1;
@@ -120,8 +121,12 @@ void get_flags(Flags* flags, int argc, char* argv[]){
             case 'd':
                 flags->dflag = 1;
                 break;
+            case 'w':
+                flags->wflag = 1;
+                flags->vflag = 0;
+                break;
             default:
-                fprintf(stderr, "Usage: %s [-vfd] [file...]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-vfdw] [file...]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
@@ -153,8 +158,8 @@ int main(int argc, char* argv[]){
     Flags flags;
     get_flags(&flags, argc, argv);
     if(flags.dflag == 1)
-        printf("flags: %d %d %d\n", flags.vflag, flags.fflag, flags.dflag);
-    if(flags.vflag == 1 || flags.fflag == 1 || flags.dflag == 1)
+        printf("flags: %d %d %d %d\n", flags.vflag, flags.fflag, flags.dflag, flags.wflag);
+    if(flags.vflag == 1 || flags.fflag == 1 || flags.dflag == 1 || flags.wflag == 1)
         runs = atoi(argv[2]);
     else
         runs = atoi(argv[1]);
@@ -176,7 +181,7 @@ int main(int argc, char* argv[]){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
         payouts[i] = get_payout(myBalls, drawnBalls);
-        if(flags.vflag == 1){
+        if(flags.vflag == 1 || (flags.wflag == 1 && payouts[i] > 0)){
             print_draw(myBalls, drawnBalls, payouts[i]);
         }
     }
