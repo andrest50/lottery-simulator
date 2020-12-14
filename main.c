@@ -28,6 +28,7 @@ typedef struct Flags {
 
 int runs = RUNS;
 int cost = COST;
+char* file = (char*) malloc(100 * sizeof(char));
 
 /*int compare_ball(int myWhiteball, int drawnWhiteball){
     if(myWhiteball == drawnWhiteball)
@@ -110,12 +111,18 @@ int add_payouts(int payouts[]){
 
 void get_flags(Flags* flags, int argc, char* argv[]){
     int opt;
-    while((opt = getopt(argc, argv, "vfdw")) != -1){
+    while((opt = getopt(argc, argv, "vf:dw")) != -1){
         switch(opt){
             case 'v':
                 flags->vflag = 1;
                 break;
             case 'f':
+                strcpy(file, optarg);
+                if(strstr(file, ".txt") == NULL){
+                    fprintf(stderr, "option: -f needs an argument\n");
+                    free(file);
+                    exit(1);
+                }
                 flags->fflag = 1;
                 break;
             case 'd':
@@ -159,10 +166,11 @@ int main(int argc, char* argv[]){
     get_flags(&flags, argc, argv);
     if(flags.dflag == 1)
         printf("flags: %d %d %d %d\n", flags.vflag, flags.fflag, flags.dflag, flags.wflag);
-    if(flags.vflag == 1 || flags.fflag == 1 || flags.dflag == 1 || flags.wflag == 1)
+    /*if(flags.vflag == 1 || flags.fflag == 1 || flags.dflag == 1 || flags.wflag == 1)
         runs = atoi(argv[2]);
     else
-        runs = atoi(argv[1]);
+        runs = atoi(argv[1]);*/
+    runs = atoi(argv[argc-1]);
 
     //Declaring variables
     Balls myBalls;
@@ -186,18 +194,20 @@ int main(int argc, char* argv[]){
         }
     }
     int total = add_payouts(payouts);
+    int earnings = total - cost * runs;
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Total winnings: $%d\n", total);
-    printf("Net earnings: $%d\n", total - cost * runs);
+    printf("Net earnings: $%d\n", earnings);
     
     //Write to file if -f flag is on
     if(flags.fflag == 1){
-        print_to_file(argv[3], total, flags);
+        print_to_file(file, earnings, flags);
     }
     //Write CPU time used if -d flag is on
     if(flags.dflag == 1)
         printf("CPU time: %f\n", cpu_time_used);
 
+    free(file);
     return 0;
 }
