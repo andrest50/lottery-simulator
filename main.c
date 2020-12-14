@@ -19,16 +19,18 @@ typedef struct Balls {
     int redball;
 } Balls;
 
-typedef struct Flags {
-    int vflag = 0; //verbose 
-    int fflag = 0; //write to file
-    int dflag = 0; //development info
-    int wflag = 0; //show only winnings
-} Flags;
+enum Flags {
+    VERBOSE = 1,
+    TEXTFILE = 2,
+    DEV = 4,
+    WINNINGS = 8
+};
 
-int runs = RUNS;
-int cost = COST;
-char* file = (char*) malloc(100 * sizeof(char));
+//global variables
+int runs = RUNS; //number of simulation rungs
+int cost = COST; //cost of a ticket
+char* file = (char*) malloc(100 * sizeof(char)); //text file for IO
+int flags = 0; //program flags
 
 /*int compare_ball(int myWhiteball, int drawnWhiteball){
     if(myWhiteball == drawnWhiteball)
@@ -109,12 +111,12 @@ int add_payouts(int payouts[]){
     return sum;
 }
 
-void get_flags(Flags* flags, int argc, char* argv[]){
+void get_flags(int argc, char* argv[]){
     int opt;
     while((opt = getopt(argc, argv, "vf:dw")) != -1){
         switch(opt){
             case 'v':
-                flags->vflag = 1;
+                flags += 1;
                 break;
             case 'f':
                 strcpy(file, optarg);
@@ -123,14 +125,16 @@ void get_flags(Flags* flags, int argc, char* argv[]){
                     free(file);
                     exit(1);
                 }
-                flags->fflag = 1;
+                flags += 2;
                 break;
             case 'd':
-                flags->dflag = 1;
+                flags += 4;
                 break;
             case 'w':
-                flags->wflag = 1;
-                flags->vflag = 0;
+                if(flags & VERBOSE)
+                    flags += 7;
+                else
+                    flags += 8;
                 break;
             default:
                 fprintf(stderr, "Usage: %s [-vfdw] [file...]\n", argv[0]);
@@ -148,12 +152,12 @@ void print_draw(Balls myBalls, Balls drawnBalls, int payout){
     printf("-------------------------------\n");
 }
 
-void print_to_file(char filename[], int total, Flags flags){
+void print_to_file(char filename[], int total){
     int file = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0744);
     char totalString[10];
     sprintf(totalString, "%d\n", total);
     int written = write(file, totalString, strlen(totalString));
-    if(flags.dflag == 1){
+    if(flags & DEV){
         printf("Bytes written: %d\n", written);
     }
     close(file);
@@ -162,14 +166,9 @@ void print_to_file(char filename[], int total, Flags flags){
 int main(int argc, char* argv[]){
 
     //Handling flags
-    Flags flags;
-    get_flags(&flags, argc, argv);
-    if(flags.dflag == 1)
-        printf("flags: %d %d %d %d\n", flags.vflag, flags.fflag, flags.dflag, flags.wflag);
-    /*if(flags.vflag == 1 || flags.fflag == 1 || flags.dflag == 1 || flags.wflag == 1)
-        runs = atoi(argv[2]);
-    else
-        runs = atoi(argv[1]);*/
+    get_flags(argc, argv);
+    if(flags & DEV)
+        printf("flags: %d %d %d %d\n", flags & VERBOSE, flags & TEXTFILE, flags & DEV, flags & WINNINGS);
     runs = atoi(argv[argc-1]);
 
     //Declaring variables
@@ -189,7 +188,7 @@ int main(int argc, char* argv[]){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
         payouts[i] = get_payout(myBalls, drawnBalls);
-        if(flags.vflag == 1 || (flags.wflag == 1 && payouts[i] > 0)){
+        if(flags & VERBOSE || (flags & WINNINGS && payouts[i] > 0)){
             print_draw(myBalls, drawnBalls, payouts[i]);
         }
     }
@@ -201,11 +200,11 @@ int main(int argc, char* argv[]){
     printf("Net earnings: $%d\n", earnings);
     
     //Write to file if -f flag is on
-    if(flags.fflag == 1){
-        print_to_file(file, earnings, flags);
+    if(flags & TEXTFILE){
+        print_to_file(file, earnings);
     }
     //Write CPU time used if -d flag is on
-    if(flags.dflag == 1)
+    if(flags & DEV)
         printf("CPU time: %f\n", cpu_time_used);
 
     free(file);
