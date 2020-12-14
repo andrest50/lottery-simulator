@@ -31,13 +31,7 @@ int runs = RUNS; //number of simulation rungs
 int cost = COST; //cost of a ticket
 char* file = (char*) malloc(100 * sizeof(char)); //text file for IO
 int flags = 0; //program flags
-
-/*int compare_ball(int myWhiteball, int drawnWhiteball){
-    if(myWhiteball == drawnWhiteball)
-        return 1;
-    else
-        return 0;
-}*/
+int showWinningsAbove = 0; //for -w flag to show winnings above $ amount
 
 int calculate_payout(int whiteMatches, int redMatch){
     int payout = 0;
@@ -113,7 +107,7 @@ int add_payouts(int payouts[]){
 
 void get_flags(int argc, char* argv[]){
     int opt;
-    while((opt = getopt(argc, argv, "vf:dw")) != -1){
+    while((opt = getopt(argc, argv, "vf:dw::")) != -1){
         switch(opt){
             case 'v':
                 flags += 1;
@@ -123,7 +117,7 @@ void get_flags(int argc, char* argv[]){
                 if(strstr(file, ".txt") == NULL){
                     fprintf(stderr, "option: -f needs an argument\n");
                     free(file);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 flags += 2;
                 break;
@@ -131,15 +125,19 @@ void get_flags(int argc, char* argv[]){
                 flags += 4;
                 break;
             case 'w':
-                if(flags & VERBOSE)
-                    flags += 7;
-                else
-                    flags += 8;
+                (flags & VERBOSE) ? (flags += 7) : (flags += 8);
+                if(optarg)
+                    showWinningsAbove = atoi(optarg);
                 break;
             default:
-                fprintf(stderr, "Usage: %s [-vfdw] [file...]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-vdwf] [file...] [runs]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
+    }
+
+    if(optind < argc){
+        //printf("%d\n", optind);
+        runs = atoi(argv[optind]);
     }
 }
 
@@ -153,14 +151,14 @@ void print_draw(Balls myBalls, Balls drawnBalls, int payout){
 }
 
 void print_to_file(char filename[], int total){
-    int file = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0744);
+    int filefd = open(filename, O_WRONLY | O_APPEND | O_CREAT, 0744);
     char totalString[10];
     sprintf(totalString, "%d\n", total);
-    int written = write(file, totalString, strlen(totalString));
+    int written = write(filefd, totalString, strlen(totalString));
     if(flags & DEV){
         printf("Bytes written: %d\n", written);
     }
-    close(file);
+    close(filefd);
 }
 
 int main(int argc, char* argv[]){
@@ -169,7 +167,7 @@ int main(int argc, char* argv[]){
     get_flags(argc, argv);
     if(flags & DEV)
         printf("flags: %d %d %d %d\n", flags & VERBOSE, flags & TEXTFILE, flags & DEV, flags & WINNINGS);
-    runs = atoi(argv[argc-1]);
+    //runs = atoi(argv[argc-1]);
 
     //Declaring variables
     Balls myBalls;
@@ -188,7 +186,7 @@ int main(int argc, char* argv[]){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
         payouts[i] = get_payout(myBalls, drawnBalls);
-        if(flags & VERBOSE || (flags & WINNINGS && payouts[i] > 0)){
+        if(flags & VERBOSE || (flags & WINNINGS && payouts[i] > showWinningsAbove)){
             print_draw(myBalls, drawnBalls, payouts[i]);
         }
     }
