@@ -68,11 +68,22 @@ int calculate_payout(int whiteMatches, int redMatch){
     return payout;
 }
 
+int already_matched(int matched[], int ballPos){
+    for(int i = 0; i < SIZE; i++){
+        if(matched[i] == ballPos)
+            return 1;
+    }
+    return 0;
+}
+
 int get_payout(Balls myBalls, Balls drawnBalls){
     int whiteMatches = 0, redMatch = 0;
+    int matched[5] = {-1, -1, -1, -1, -1};
     for(int i = 0; i < SIZE; i++){
         for(int j = 0; j < SIZE; j++){
-            if(myBalls.whiteballs[i] == drawnBalls.whiteballs[j]){
+            if(myBalls.whiteballs[i] == drawnBalls.whiteballs[j] 
+                && already_matched(matched, j) != 1){
+                matched[whiteMatches] = j;
                 whiteMatches++;
                 break;
             }
@@ -163,6 +174,8 @@ void print_to_file(char filename[], int total){
 
 int main(int argc, char* argv[]){
 
+    //make it so that argv[1] can be --help and display how to use program
+
     //Handling flags
     get_flags(argc, argv);
     if(flags & DEV)
@@ -186,7 +199,7 @@ int main(int argc, char* argv[]){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
         payouts[i] = get_payout(myBalls, drawnBalls);
-        if(flags & VERBOSE || (flags & WINNINGS && payouts[i] > showWinningsAbove)){
+        if(flags & VERBOSE || (flags & WINNINGS && payouts[i] >= showWinningsAbove)){
             print_draw(myBalls, drawnBalls, payouts[i]);
         }
     }
