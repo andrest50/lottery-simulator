@@ -17,6 +17,8 @@
 typedef struct Balls {
     int whiteballs[SIZE];
     int redball;
+    int whiteMatches;
+    int redMatch;
 } Balls;
 
 enum Flags {
@@ -76,12 +78,12 @@ int already_matched(int matched[], int ballPos){
     return 0;
 }
 
-int get_payout(Balls myBalls, Balls drawnBalls){
+int get_payout(Balls* myBalls, Balls* drawnBalls){
     int whiteMatches = 0, redMatch = 0;
     int matched[5] = {-1, -1, -1, -1, -1};
     for(int i = 0; i < SIZE; i++){
         for(int j = 0; j < SIZE; j++){
-            if(myBalls.whiteballs[i] == drawnBalls.whiteballs[j] 
+            if(myBalls->whiteballs[i] == drawnBalls->whiteballs[j] 
                 && already_matched(matched, j) != 1){
                 matched[whiteMatches] = j;
                 whiteMatches++;
@@ -89,8 +91,12 @@ int get_payout(Balls myBalls, Balls drawnBalls){
             }
         }
     }
-    if(myBalls.redball == drawnBalls.redball)
+    if(myBalls->redball == drawnBalls->redball)
         redMatch = 1;
+
+    myBalls->whiteMatches = whiteMatches;
+    myBalls->redMatch = redMatch;
+
     return calculate_payout(whiteMatches, redMatch);
 }
 
@@ -158,6 +164,7 @@ void print_draw(Balls myBalls, Balls drawnBalls, int payout){
     print_balls(myBalls);
     printf("Drawn balls: \t");
     print_balls(drawnBalls);
+    printf("White matches: %d     Red match: %d\n", myBalls.whiteMatches, myBalls.redMatch);
     printf("Winnings: $%d\n", payout);
     printf("-------------------------------\n");
 }
@@ -212,7 +219,7 @@ int main(int argc, char* argv[]){
     for(int i = 0; i < runs; i++){
         generate_balls(&myBalls);
         generate_balls(&drawnBalls);
-        payouts[i] = get_payout(myBalls, drawnBalls);
+        payouts[i] = get_payout(&myBalls, &drawnBalls);
         if(flags & VERBOSE || (flags & WINNINGS && payouts[i] >= showWinningsAbove)){
             print_draw(myBalls, drawnBalls, payouts[i]);
         }
