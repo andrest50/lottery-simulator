@@ -14,12 +14,12 @@
 #define COST 2
 #define RUNS 1000
 
-typedef struct Balls {
+typedef struct Tickets {
     int whiteballs[SIZE];
     int redball;
     int whiteMatches;
     int redMatch;
-} Balls;
+} Tickets;
 
 enum Flags {
     VERBOSE = 1,
@@ -70,20 +70,20 @@ int calculate_payout(int whiteMatches, int redMatch){
     return payout;
 }
 
-int already_matched(int matched[], int ballPos){
+int already_matched(int matched[], int ticketPos){
     for(int i = 0; i < SIZE; i++){
-        if(matched[i] == ballPos)
+        if(matched[i] == ticketPos)
             return 1;
     }
     return 0;
 }
 
-int get_payout(Balls* myBalls, Balls* drawnBalls){
+int get_payout(Tickets* myTickets, Tickets* drawnTickets){
     int whiteMatches = 0, redMatch = 0;
     int matched[5] = {-1, -1, -1, -1, -1};
     for(int i = 0; i < SIZE; i++){
         for(int j = 0; j < SIZE; j++){
-            if(myBalls->whiteballs[i] == drawnBalls->whiteballs[j] 
+            if(myTickets->whiteballs[i] == drawnTickets->whiteballs[j] 
                 && already_matched(matched, j) != 1){
                 matched[whiteMatches] = j;
                 whiteMatches++;
@@ -91,27 +91,27 @@ int get_payout(Balls* myBalls, Balls* drawnBalls){
             }
         }
     }
-    if(myBalls->redball == drawnBalls->redball)
+    if(myTickets->redball == drawnTickets->redball)
         redMatch = 1;
 
-    myBalls->whiteMatches = whiteMatches;
-    myBalls->redMatch = redMatch;
+    myTickets->whiteMatches = whiteMatches;
+    myTickets->redMatch = redMatch;
 
     return calculate_payout(whiteMatches, redMatch);
 }
 
-void generate_balls(Balls* balls){
+void generate_tickets(Tickets* tickets){
     for(int i = 0; i < SIZE; i++){
-        balls->whiteballs[i] = (rand() % 69) + 1;
+        tickets->whiteballs[i] = (rand() % 69) + 1;
     }
-    balls->redball = (rand() % 26) + 1;
+    tickets->redball = (rand() % 26) + 1;
 }
 
-void print_balls(Balls balls){
+void print_tickets(Tickets tickets){
     for(int i = 0; i < SIZE; i++){
-        printf("%d ", balls.whiteballs[i]);
+        printf("%d ", tickets.whiteballs[i]);
     }
-    printf("%d\n", balls.redball);
+    printf("| %d\n", tickets.redball);
 }
 
 int add_payouts(int payouts[]){
@@ -159,14 +159,15 @@ void get_flags(int argc, char* argv[]){
     }
 }
 
-void print_draw(Balls myBalls, Balls drawnBalls, int payout){
-    printf("My balls: \t");
-    print_balls(myBalls);
-    printf("Drawn balls: \t");
-    print_balls(drawnBalls);
-    printf("White matches: %d     Red match: %d\n", myBalls.whiteMatches, myBalls.redMatch);
+void print_draw(Tickets myTickets, Tickets drawnTickets, int payout){
+    printf("My tickets: \t     ");
+    print_tickets(myTickets);
+    printf("Drawn tickets: \t     ");
+    print_tickets(drawnTickets);
+    printf("White matches: %d     Powerball match: %s\n", 
+        myTickets.whiteMatches, myTickets.redMatch ? "yes" : "no");
     printf("Winnings: $%d\n", payout);
-    printf("-------------------------------\n");
+    printf("=========================================\n");
 }
 
 void print_to_file(char filename[], int total){
@@ -204,8 +205,8 @@ int main(int argc, char* argv[]){
     //runs = atoi(argv[argc-1]);
 
     //Declaring variables
-    Balls myBalls;
-    Balls drawnBalls;
+    Tickets myTickets;
+    Tickets drawnTickets;
     int payouts[runs];
 
     time_t t;
@@ -217,11 +218,11 @@ int main(int argc, char* argv[]){
     //Simulate each lottery drawing
     start = clock();
     for(int i = 0; i < runs; i++){
-        generate_balls(&myBalls);
-        generate_balls(&drawnBalls);
-        payouts[i] = get_payout(&myBalls, &drawnBalls);
+        generate_tickets(&myTickets);
+        generate_tickets(&drawnTickets);
+        payouts[i] = get_payout(&myTickets, &drawnTickets);
         if(flags & VERBOSE || (flags & WINNINGS && payouts[i] >= showWinningsAbove)){
-            print_draw(myBalls, drawnBalls, payouts[i]);
+            print_draw(myTickets, drawnTickets, payouts[i]);
         }
     }
     int total = add_payouts(payouts);
