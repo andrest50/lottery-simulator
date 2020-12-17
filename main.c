@@ -29,7 +29,7 @@ enum Flags {
 //global variables
 int runs = RUNS; //number of simulation rungs
 int cost = COST; //cost of a ticket
-char* file = (char*) malloc(100 * sizeof(char)); //text file for IO
+char* file; //text file for IO
 int flags = 0; //program flags
 int showWinningsAbove = 0; //for -w flag to show winnings above $ amount
 
@@ -124,6 +124,7 @@ void get_flags(int argc, char* argv[]){
                 flags += 1;
                 break;
             case 'f':
+                file = (char*) malloc(100 * sizeof(char));
                 strcpy(file, optarg);
                 if(strstr(file, ".txt") == NULL){
                     fprintf(stderr, "option: -f needs an argument\n");
