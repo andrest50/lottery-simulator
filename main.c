@@ -173,9 +173,22 @@ void print_to_file(char filename[], int total){
     close(filefd);
 }
 
+void help(){
+    printf("Run the program using ./lottery [flags...] [no_simulations]\n");
+    printf("Flags:\n");
+    printf("\t-v : prints every simulation result\n");
+    printf("\t-f : allows you to specify a file name to print earnings to (e.g. -f test.txt)\n");
+    printf("\t-d : run in development mode to see flags enabled and CPU runtime\n");
+    printf("\t-w : prints only simulation results above specified amount (e.g. -w5 for $5 and above)\n");
+}
+
 int main(int argc, char* argv[]){
 
     //make it so that argv[1] can be --help and display how to use program
+    if(strcmp(argv[1], "--help") == 0){
+        help();
+        exit(1);
+    }
 
     //Handling flags
     get_flags(argc, argv);
