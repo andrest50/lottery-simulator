@@ -193,13 +193,14 @@ void help(){
 int main(int argc, char* argv[]){
 
     //make it so that argv[1] can be --help and display how to use program
-    if(strcmp(argv[1], "--help") == 0){
+    if(argc > 1 && strcmp(argv[1], "--help") == 0){
         help();
         exit(1);
     }
 
     //Handling flags
-    get_flags(argc, argv);
+    if(argc > 1)
+        get_flags(argc, argv);
     if(flags & DEV)
         printf("flags: %d %d %d %d\n", flags & VERBOSE, flags & TEXTFILE, flags & DEV, flags & WINNINGS);
     //runs = atoi(argv[argc-1]);
