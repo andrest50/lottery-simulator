@@ -1,5 +1,4 @@
 # Lottery Simulator
-
 This is a program for simulating the lottery any number of times and viewing the results neatly.
 
 ## Flags:
